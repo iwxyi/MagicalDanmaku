@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1054</width>
-    <height>1903</height>
+    <height>2032</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -226,13 +226,30 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="WaterZoomButton" name="platformButton">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
+         <property name="toolTip">
+          <string>直播论坛：提问/反馈/建议</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../resources/resource.qrc">
+           <normaloff>:/icons/platform/bilibili</normaloff>:/icons/platform/bilibili</iconset>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1872,7 +1889,7 @@ margin: 6px;</string>
              <x>0</x>
              <y>0</y>
              <width>972</width>
-             <height>1731</height>
+             <height>1860</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2706,7 +2723,7 @@ QPushButton:pressed
 font-weight: 500;</string>
                </property>
                <property name="text">
-                <string>功能型AI</string>
+                <string>AI分析</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -2747,17 +2764,51 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="CheckBox1" name="GPTAnalysisCheck">
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="toolTip">
-                <string>提前体验新版特性，可能会有未预料的问题</string>
-               </property>
-               <property name="text">
-                <string>启用</string>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout" name="horizontalLayout_85">
+               <item>
+                <widget class="CheckBox1" name="GPTAnalysisCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>提前体验新版特性，可能会有未预料的问题</string>
+                 </property>
+                 <property name="text">
+                  <string>启用</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="GPTAnalysisDefaultButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+                 </property>
+                 <property name="text">
+                  <string> 还原/升级</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
              <item>
               <widget class="QPushButton" name="GPTAnalysisPromptButton">
@@ -2785,7 +2836,7 @@ QPushButton:pressed
 </string>
                </property>
                <property name="text">
-                <string>功能提示词</string>
+                <string>分析提示词</string>
                </property>
               </widget>
              </item>
@@ -8041,7 +8092,7 @@ QPushButton:pressed
 }</string>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="page">
            <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -10233,7 +10284,7 @@ QTabBar::tab:selected
 </string>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>4</number>
           </property>
           <widget class="QWidget" name="tabTimer">
            <attribute name="title">
@@ -10631,7 +10682,7 @@ QTabBar::tab:selected
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="tab">
+          <widget class="QWidget" name="tabSubAccount">
            <attribute name="title">
             <string>子账号</string>
            </attribute>
@@ -11390,6 +11441,7 @@ font-weight: 500;</string>
      <string>账号</string>
     </property>
     <addaction name="actionQRCode_Login"/>
+    <addaction name="actionWebViewLogin"/>
     <addaction name="actionSet_Cookie"/>
     <addaction name="actionSet_Danmaku_Data_Format"/>
     <addaction name="separator"/>
@@ -11847,6 +11899,15 @@ font-weight: 500;</string>
    </property>
    <property name="text">
     <string>查询数据库</string>
+   </property>
+  </action>
+  <action name="actionWebViewLogin">
+   <property name="icon">
+    <iconset resource="../resources/resource.qrc">
+     <normaloff>:/icons/local</normaloff>:/icons/local</iconset>
+   </property>
+   <property name="text">
+    <string>浏览器登录</string>
    </property>
   </action>
  </widget>

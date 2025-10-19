@@ -23,6 +23,15 @@ void FansArchivesService::start()
     timer->start();
 }
 
+QString FansArchivesService::getFansArchives(const QString& uid)
+{
+    MyJson json = sqlService->getFansArchives(uid);
+    if (!json.isEmpty()) {
+        return json.value("archive").toString();
+    }
+    return QString();
+}
+
 void FansArchivesService::onTimer()
 {
     if (!sqlService || !sqlService->isOpen())
@@ -138,7 +147,7 @@ void FansArchivesService::onTimer()
     ChatGPTUtil* chatgpt = new ChatGPTUtil(this);
     chatgpt->setStream(false);
     connect(chatgpt, &ChatGPTUtil::signalResponseError, this, [=](const QByteArray& ba) {
-        qCritical() << QString(ba);
+        emit signalError(QString(ba));
     });
     connect(chatgpt, &ChatGPTUtil::finished, this, [=]{
         chatgpt->deleteLater();

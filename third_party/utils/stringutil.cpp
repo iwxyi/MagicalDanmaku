@@ -216,14 +216,34 @@ QString simplifyChapter(QString text)
     return text.mid(start_pos, end_pos-start_pos);
 }
 
+/// 中文的话，返回的会是原文
 QString urlEncode(QString s)
 {
     return QUrl::toPercentEncoding(s);
 }
 
+/// 强制变成百分比编码，中文也会返回百分号数字
+QString urlEncodePercent(QString s)
+{
+    QByteArray utf8Bytes = s.toUtf8();
+    QByteArray encoded = QUrl::toPercentEncoding(utf8Bytes);
+    return encoded;
+}
+
 QString urlDecode(QString s)
 {
     return QUrl::fromPercentEncoding(s.toUtf8());
+}
+
+QString toUrlParam(const QStringList &params)
+{
+    QString paramsStr;
+    for (int i = 0; i < params.size(); i += 2)
+    {
+        paramsStr += params[i] + "=" + urlEncodePercent(params[i + 1]) + "&";
+    }
+    paramsStr.chop(1);
+    return paramsStr;
 }
 
 bool canBeNickname(QString s)
@@ -332,7 +352,7 @@ bool isHtmlString(const QString &str)
 
 QString getRandomKey(int len)
 {
-    const QString ss = "abcdefghijklmnopqrstuvwxyz0123456789";
+    const QString ss = "ABCDEFGHIGKLMNOPQRSTUVWXYZabcdefghigklmnopqrstuvwxyz0123456789=";
     QString result;
     while (len--)
     {

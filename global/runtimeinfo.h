@@ -7,7 +7,7 @@
 #include <QDir>
 
 #define APP_ID 0
-#define APP_VERSION "5.4.1"
+#define APP_VERSION "6.0.0"
 #define LOCAL_MODE 0
 
 #if true
@@ -23,22 +23,27 @@ class LiveDanmaku;
 
 enum LivePlatform
 {
-    Bilibili,   // 哔哩哔哩
-    Douyin,     // 抖音
-    Huya,       // 虎牙
-    Douyu,      // 斗鱼
-    Kuaishou,   // 快手
+    Bilibili = 0,       // 哔哩哔哩
+    Douyin = 1,         // 抖音
+    Huya,               // 虎牙
+    Douyu,              // 斗鱼
+    Kuaishou,           // 快手
+    BilibiliOpen = 10,  // 哔哩哔哩开放平台
+    Keyu = 100,         // 可遇AI的通用弹幕
+    AnyWS = 101,        // 通用WebSocket
 };
 
 class RuntimeInfo
 {
 public:
     LivePlatform livePlatform = Bilibili;
+    QString CPU_ID;
     bool asPlugin = false;
     bool asFreeOnly = false;
     bool justStart = true; // 启动几秒内不进行发送，避免一些尴尬场景
     bool isReconnect = false; // 是否是重连
     bool adjustCookie = false;
+    bool dontBackupSettingFile = false; // 是否不备份设置文件
 
     QHash<QString, QString> pinyinMap; // 拼音
     QList<LiveDanmaku> allDanmakus;
@@ -58,6 +63,13 @@ public:
     QString ffmpegPath;
     QWidget* mainwindow = nullptr;
     QWidget* danmakuWindow = nullptr;
+
+    QString getPlatformSuffix() const
+    {
+        if (livePlatform == 0)
+            return "";
+        return "_" + snum(livePlatform);
+    }
 };
 
 extern RuntimeInfo* rt;

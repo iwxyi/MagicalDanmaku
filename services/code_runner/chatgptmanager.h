@@ -5,7 +5,7 @@
 #include "livedanmaku.h"
 #include "chatgptutil.h"
 #include "netinterface.h"
-#include "liveroomservice.h"
+#include "liveservicebase.h"
 
 #define GPT_TASK_RESPONSE_EVENT QString("GPT_RESPONSE")
 
@@ -14,17 +14,22 @@ class ChatGPTManager : public QObject
 public:
     ChatGPTManager(QObject* parent = nullptr);
 
-    void setLiveService(LiveRoomService* service);
+    void setLiveService(LiveServiceBase* service);
 
     void chat(UIDT uid, QString text, NetStringFunc func);
+
+    void analyze(QStringList texts, NetStringFunc func);
 
     void clear();
 
     void localNotify(const QString& text);
 
+    bool isAnalyzing() const;
+
 private:
-    LiveRoomService* liveService = nullptr;
+    LiveServiceBase* liveService = nullptr;
     QMap<UIDT, QList<ChatBean>> usersChats;
+    bool _isAnalyzing = false;
 };
 
 #endif // CHATGPTMANAGER_H

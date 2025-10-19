@@ -64,7 +64,6 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-#define CALC_DEB if (0) qDebug() // 输出计算相关的信息
 #define SERVER_DEB if (0) qDebug() // 输出服务器功能相关信息
 
 #define CONNECT_SERVER_INTERVAL 1800000
@@ -164,6 +163,7 @@ private slots:
     void addListItemOnCurrentPage();
 
     void slotDiange(const LiveDanmaku &danmaku);
+    void slotAIReply(const LiveDanmaku &danmaku, bool manual = false);
 
     void slotComboSend();
 
@@ -409,8 +409,6 @@ private slots:
 
     void on_AIReplySelfCheck_clicked();
 
-    void slotAIReplyed(QString reply, LiveDanmaku danmaku);
-
     void on_danmuLongestSpin_editingFinished();
 
     void on_startupAnimationCheck_clicked();
@@ -488,6 +486,8 @@ private slots:
     void on_actionJoin_Battle_triggered();
 
     void on_actionQRCode_Login_triggered();
+
+    void on_actionWebViewLogin_triggered();
 
     void on_allowAdminControlCheck_clicked();
 
@@ -707,6 +707,8 @@ private slots:
 
     void on_GPTAnalysisFormatButton_clicked();
 
+    void on_GPTAnalysisDefaultButton_clicked();
+
     void on_removeLongerRandomDanmakuCheck_clicked();
 
     void on_GPTAnalysisEventButton_clicked();
@@ -761,12 +763,15 @@ private slots:
 
     void on_proxyTestIPButton_clicked();
 
+    void on_platformButton_clicked();
+
 private:
     void initView();
     void initStyle();
     void initObject();
     void initPath();
     void initLiveService();
+    void initLivePlatform();
     void readConfig();
     void readConfig2();
     void initDanmakuWindow();
@@ -948,7 +953,7 @@ private:
     SingleEntrance* fakeEntrance = nullptr;
     
     // 直播数据
-    LiveRoomService* liveService = nullptr;
+    LiveServiceBase* liveService = nullptr;
 
     // 启动与定时
     QTimer* syncTimer = nullptr;

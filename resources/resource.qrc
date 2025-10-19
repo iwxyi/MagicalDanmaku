@@ -134,6 +134,10 @@
         <file alias="copy_small">icons/copy_small.png</file>
         <file alias="add">icons/add.png</file>
         <file alias="help">icons/help.png</file>
+        <file alias="code_gui">icons/code_gui.png</file>
+        <file alias="add_circle">icons/add_circle.png</file>
+        <file alias="x">icons/x.png</file>
+        <file alias="user_agent">icons/user_agent.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>
@@ -193,6 +197,8 @@
         <file alias="kk">documents/kk.key</file>
         <file alias="archives_prompt">documents/archives_prompt.txt</file>
         <file alias="ask_sql_prompt">documents/ask_sql_prompt.txt</file>
+        <file alias="script_definitions">documents/script_definitions.json</file>
+        <file alias="color_list">documents/color_list.txt</file>
     </qresource>
     <qresource prefix="/bubbles">
         <file alias="bubble1">bubbles/bubble1.png</file>
@@ -210,5 +216,17 @@
         <file alias="checked_press">widgets/checked_press.png</file>
         <file alias="unchecked_press">widgets/unchecked_press.png</file>
         <file alias="unchecked_hover">widgets/unckeced_hover.png</file>
+    </qresource>
+    <qresource prefix="/icons/platform">
+        <file alias="kuaishou">icons/platform/kuaishou.png</file>
+        <file alias="huya">icons/platform/huya.png</file>
+        <file alias="douyu">icons/platform/douyu.png</file>
+        <file alias="douyin">icons/platform/douyin.png</file>
+        <file alias="bilibili">icons/platform/bilibili.png</file>
+        <file alias="keyu">icons/platform/keyu.png</file>
+        <file alias="websocket">icons/platform/websocket.png</file>
+    </qresource>
+    <qresource prefix="/scripts">
+        <file alias="douyin_signature">scripts/douyin_signature.js</file>
     </qresource>
 </RCC>

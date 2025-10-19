@@ -26,7 +26,8 @@ enum MessageType
     MSG_SHARE,
     MSG_PK_BEST,
     MSG_SUPER_CHAT,
-    MSG_EXTRA
+    MSG_EXTRA,
+    MSG_LIKE
 };
 
 class LiveDanmaku
@@ -157,6 +158,8 @@ public:
     static LiveDanmaku fromDanmakuJson(QJsonObject object)
     {
         LiveDanmaku danmaku;
+        if (object.contains("_id"))
+            danmaku._id = static_cast<qint64>(object.value("uid").toDouble());
         danmaku.text = object.value("text").toString();
         if (object.value("uid").isString())
             danmaku.uid = object.value("uid").toString();
@@ -218,7 +221,10 @@ public:
         danmaku.first = object.value("first").toInt();
         danmaku.special = object.value("special").toInt();
         danmaku.extraJson = object.value("extra").toObject();
-        danmaku.faceUrl = object.value("face_url").toString();
+        if (object.contains("face_url"))
+            danmaku.avatar = object.value("face_url").toString();
+        else if (object.contains("avatar"))
+            danmaku.avatar = object.value("avatar").toString();
         danmaku.show_reply = object.value("show_reply").toBool();
         danmaku.reply_mid = static_cast<qint64>(object.value("reply_mid").toDouble());
         danmaku.reply_uname = object.value("reply_uname").toString();
@@ -227,12 +233,14 @@ public:
         danmaku.reply_type_enum = object.value("reply_type_enum").toInt();
         danmaku.wealth_level = object.value("honor_level").toInt();
         danmaku.fromRoomId = object.value("from_room_id").toString();
+        danmaku.logId = object.value("log_id").toString();
         return danmaku;
     }
 
     QJsonObject toJson() const
     {
         QJsonObject object;
+        object.insert("_id", _id);
         object.insert("nickname", nickname);
         object.insert("uid", uid);
         if (msgType == MSG_DANMAKU || msgType == MSG_SUPER_CHAT)
@@ -340,8 +348,8 @@ public:
             object.insert("prev_timestamp", prev_timestamp);
         if (!extraJson.isEmpty())
             object.insert("extra", extraJson);
-        if (!faceUrl.isEmpty())
-            object.insert("face_url", faceUrl);
+        if (!avatar.isEmpty())
+            object.insert("avatar", avatar);
         if (show_reply && reply_mid > 0)
         {
             object.insert("show_reply", show_reply);
@@ -358,6 +366,10 @@ public:
         if (!fromRoomId.isEmpty())
         {
             object.insert("from_room_id", fromRoomId);
+        }
+        if (!logId.isEmpty())
+        {
+            object.insert("log_id", logId);
         }
         return object;
     }
@@ -452,6 +464,11 @@ public:
         return "未知消息类型";
     }
 
+    bool operator==(const LiveDanmaku& other) const
+    {
+        return this->_id == other._id;
+    }
+
     bool is(MessageType type) const
     {
         return this->msgType == type;
@@ -462,6 +479,11 @@ public:
         this->msgType = MSG_ATTENTION;
         prev_timestamp = attentionTime;
         attention = true;
+    }
+
+    void setAttention(int attention)
+    {
+        this->attention = attention;
     }
 
     void transToDanmu()
@@ -488,7 +510,7 @@ public:
     {
         this->nickname = name;
         this->uid = uid;
-        this->faceUrl = face;
+        this->avatar = face;
         this->uname_color = unameColor;
         this->text_color = textColor;
     }
@@ -532,9 +554,19 @@ public:
         this->uid = uid;
     }
 
+    void setSecUid(QString secUid)
+    {
+        this->secUid = secUid;
+    }
+
     void setText(QString s)
     {
         this->text = s;
+    }
+
+    void setCoinType(QString s)
+    {
+        this->coin_type = s;
     }
 
     void setNumber(int num)
@@ -570,6 +602,14 @@ public:
     void setPkLink(bool link)
     {
         this->pk_link = link;
+    }
+
+    void setGift(qint64 giftId, QString giftName, int num, qint64 totalCoin)
+    {
+        this->giftId = giftId;
+        this->giftName = giftName;
+        this->number = num;
+        this->total_coin = totalCoin;
     }
 
     void addGift(int count, qint64 total, qint64 discountPrice, QDateTime time)
@@ -641,9 +681,9 @@ public:
                 && this->text == another.text;
     }
 
-    void setFaceUrl(const QString& url)
+    void setAvatar(const QString& url)
     {
-        this->faceUrl = url;
+        this->avatar = url;
     }
 
     void setAIReply(const QString& reply)
@@ -676,6 +716,11 @@ public:
         this->original_gift_name = name;
     }
 
+    void setLogId(QString logId)
+    {
+        this->logId = logId;
+    }
+
     QString getText() const
     {
         return text;
@@ -684,6 +729,11 @@ public:
     UIDT getUid() const
     {
         return uid;
+    }
+
+    QString getSecUid() const
+    {
+        return secUid;
     }
 
     QString getNickname() const
@@ -796,6 +846,17 @@ public:
     bool isGoldCoin() const
     {
         return coin_type == "gold";
+    }
+
+    QString getCoinName() const
+    {
+        if (coin_type == "gold")
+            return "金瓜子";
+        else if (coin_type == "silver")
+            return "银瓜子";
+        else if (coin_type.contains("dy"))
+            return "抖币";
+        return "<未知单位>";
     }
 
     bool isSilverCoin() const
@@ -928,6 +989,16 @@ public:
         return robot;
     }
 
+    QDateTime getTime() const
+    {
+        return timeline;
+    }
+
+    qint64 getTimestamp() const
+    {
+        return timeline.toSecsSinceEpoch();
+    }
+
     qint64 getPrevTimestamp() const
     {
         return prev_timestamp;
@@ -983,9 +1054,9 @@ public:
         return retry > 0;
     }
 
-    QString getFaceUrl() const
+    QString getAvatar() const
     {
-        return faceUrl;
+        return avatar;
     }
 
     QString getAIReply() const
@@ -1043,11 +1114,18 @@ public:
         return fromRoomId;
     }
 
+    QString getLogId() const
+    {
+        return logId;
+    }
+
 protected:
+    qint64 _id = QDateTime::currentMSecsSinceEpoch() * 1000 + (100 + qrand() % 900);
     MessageType msgType = MSG_DANMAKU;
 
     QString text;
     UIDT uid = 0; // 用户ID
+    QString secUid; // 用户secUid
     QString nickname;
     QString uname_color; // 没有的话是空的
     QString text_color; // 没有的话是空的
@@ -1061,7 +1139,7 @@ protected:
     int iphone = 0; // 手机实名
     bool no_reply = false; // 不需要处理的弹幕
     bool auto_send = false; // 自己发送的弹幕，同样也不需要处理
-    QString faceUrl;
+    QString avatar;
 
     QString anchor_roomid;
     int medal_level = 0;
@@ -1088,6 +1166,7 @@ protected:
     qint64 total_coin = 0;
     qint64 discount_price = 0;
     QString original_gift_name;
+    QString logId;
 
     QString spread_desc; // 星光推广
     QString spread_info; // 颜色

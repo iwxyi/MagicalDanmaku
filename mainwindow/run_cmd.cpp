@@ -348,7 +348,13 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
     {
         // {key} = val
         // {key} += val
-        QRegularExpression re("^\\s*\\{(.+?)\\}\\s*(.?)=\\s*(.*)\\s*$");
+        // {key} + val
+        auto isPureNumber = [=](QString s) -> bool {
+            bool ok;
+            s.toInt(&ok);
+            return ok;
+        };
+        QRegularExpression re("^\\s*\\{(.+?)\\}\\s*([\\+\\-\\*/%=]+)\\s*(.*)\\s*$");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QString key = match.captured(1);
@@ -356,22 +362,88 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QString val = match.captured(3);
             if (!key.contains("/"))
                 key = "heaps/" + key;
-            if (ope.isEmpty())
+            QString keyS = cr->heaps->value(key).toString();
+            if (ope.isEmpty() || ope == "=")
             {
                 cr->heaps->setValue(key, val);
                 qInfo() << "set value" << key << "=" << val;
+            }
+            else if (!isPureNumber(keyS) || !isPureNumber(val)) // 字符串操作
+            {
+                if (ope == "+" || ope == "+=")
+                    keyS += val;
+                else if (ope == "-" || ope == "-=")
+                {
+                    if (isPureNumber(val))
+                    {
+                        keyS += val;
+                    }
+                    else // 字符串查找并减去
+                    {
+                        int pos = keyS.indexOf(val);
+                        if (pos > -1)
+                            keyS = keyS.left(pos) + keyS.mid(pos + val.length());
+                        else
+                            showError("字符串查找失败", keyS + "中没有" + val);
+                    }
+                }
+                else if (ope == "*" || ope == "*=")
+                {
+                    if (isPureNumber(val)) // keyS重复val次
+                    {
+                        int n = val.toInt();
+                        if (n > 0)
+                        {
+                            keyS = keyS.repeated(n);
+                        }
+                        else
+                        {
+                            showError("重复次数小于1", msg);
+                        }
+                    }
+                    else
+                    {
+                        showError("不支持的字符串*运算", msg);
+                    }
+                }
+                else if (ope == "/" || ope == "/=")
+                {
+                    if (isPureNumber(val)) // 长度除以N
+                    {
+                        int n = val.toInt();
+                        if (n > 0)
+                        {
+                            keyS = keyS.left(keyS.length() / n);
+                        }
+                        else
+                        {
+                            showError("除数小于1", msg);
+                        }
+                    }
+                    else // 除去里面所有val
+                    {
+                        QStringList list = keyS.split(val);
+                        keyS = list.join("");
+                    }
+                }
+                else
+                {
+                    qWarning() << "不支持的操作符：" << ope;
+                }
+                cr->heaps->setValue(key, keyS);
+                qInfo() << "set value" << key << "=" << keyS;
             }
             else // 数值运算
             {
                 qint64 v = cr->heaps->value(key).toLongLong();
                 qint64 x = val.toLongLong();
-                if (ope == "+")
+                if (ope == "+" || ope == "+=")
                     v += x;
-                else if (ope == "-")
+                else if (ope == "-" || ope == "-=")
                     v -= x;
-                else if (ope == "*")
+                else if (ope == "*" || ope == "*=")
                     v *= x;
-                else if (ope == "/")
+                else if (ope == "/" || ope == "/=")
                 {
                     if (x == 0)
                     {
@@ -380,7 +452,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
                     }
                     v /= x;
                 }
-                else if (ope == "%")
+                else if (ope == "%" || ope == "%=")
                 {
                     if (x == 0)
                     {
@@ -1302,6 +1374,21 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         }
     }
 
+    // 发送websocket消息
+    if (msg.contains("sendToLiveSocket"))
+    {
+        re = RE("sendToLiveSocket\\s*\\(\\s*(.*?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString data = caps.at(1);
+            data = cr->toMultiLine(data);
+            qInfo() << "执行命令：" << caps;
+            liveService->sendSocketMessage(data.toUtf8());
+            return true;
+        }
+    }
+
     // 命令行
     if (msg.contains("runCommandLine"))
     {
@@ -1769,7 +1856,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
                                 {
                                     QString _var = match2.captured(0);
                                     QString text = match2.captured(1);
-                                    text = snum(ConditionUtil::calcIntExpression(text));
+                                    text = snum(CalculatorUtil::calcIntExpression(text));
                                     newValue.replace(_var, text); // 默认使用变量类型吧
                                 }
                             }
@@ -2258,35 +2345,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
 
             chatService->chatgpt->chat(uid, text, [=](QString result){
                 // 处理代码
-                if (us->chatgpt_analysis)
-                {
-                    // 如果开启了功能型GPT，那么回复会是JSON格式
-                    QString reply = result;
-                    if (!reply.startsWith("{"))
-                    {
-                        int index = reply.indexOf("{");
-                        if (index > -1)
-                        {
-                            reply = reply.right(reply.length() - index);
-                        }
-                    }
-                    if (!reply.endsWith("}"))
-                    {
-                        int index = reply.lastIndexOf("}");
-                        if (index > -1)
-                        {
-                            reply = reply.left(index + 1);
-                        }
-                    }
-                    MyJson json(reply.toUtf8());
-                    if (json.isEmpty())
-                    {
-                        qWarning() << "无法解析的GPT回复格式：" << reply;
-                        return;
-                    }
-                    result = json.value("msg").toString();
-                }
-                else
+                // if (!us->chatgpt_analysis)
                 {
                     // 过滤回复后的内容
                     LiveDanmaku dmk = danmaku;
@@ -2451,6 +2510,11 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QString text = caps.at(1);
             QString uname = caps.at(2);
             qInfo() << "执行命令：" << caps;
+            if (!ui->DiangeAutoCopyCheck->isChecked())
+            {
+                qInfo() << "点歌总开关已关闭";
+                return true;
+            }
             if (!musicWindow)
                 on_actionShow_Order_Player_Window_triggered();
             musicWindow->slotSearchAndAutoAppend(text, uname);
@@ -3005,6 +3069,35 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         }
     }
 
+    if (msg.contains("startLive"))
+    {
+        re = RE("startLive\\s*\\(\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            liveService->myLiveStartLive();
+            return true;
+        }
+    }   
+    
+    if (msg.contains("stopLive"))
+    {
+        re = RE("stopLive\\s*\\(\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            liveService->myLiveStopLive();
+            return true;
+        }
+    }
+    
+    if (msg.contains("setLiveArea"))
+    {
+        re = RE("setLiveArea\\s*\\(\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            liveService->myLiveUpdateArea(match.captured(1));
+            return true;
+        }
+    }
 
     return false;
 }

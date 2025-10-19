@@ -6,6 +6,7 @@
 #include "ui_buyvipdialog.h"
 #include "clickablewidget.h"
 #include "fileutil.h"
+#include "accountinfo.h"
 
 BuyVIPDialog::BuyVIPDialog(QString dataPath, QString roomId, QString upId, QString userId, QString roomTitle, QString upName, QString username, qint64 deadline, bool *types, QWidget *parent) :
     QDialog(parent), NetInterface(this), ui(new Ui::BuyVIPDialog),
@@ -330,6 +331,7 @@ void BuyVIPDialog::showEvent(QShowEvent *e)
             });
         }
 
+        bool simulatePressed = true;
         if (types[1])
             btns[0]->simulateStatePress();
         else if (types[2])
@@ -337,7 +339,52 @@ void BuyVIPDialog::showEvent(QShowEvent *e)
         else if (types[3])
             btns[2]->simulateStatePress();
         else
-            btns.first()->simulateStatePress();
+            simulatePressed = false;
+        
+        switch (rt->livePlatform)
+        {
+        case Bilibili:
+        {
+            if (!simulatePressed)
+                btns[0]->simulateStatePress();
+            break;
+        }
+        case Douyin:
+        {
+            if (!simulatePressed)
+                btns[1]->simulateStatePress();
+            bool hasLogin = !ac->cookieSecUid.isEmpty();
+            btns[0]->setEnabled(hasLogin);
+            btns[2]->setEnabled(hasLogin);
+            ui->typeRRBgCard->setEnabled(hasLogin);
+            ui->typeRobotBgCard->setEnabled(hasLogin);
+            break;
+        }
+        case Keyu:
+        case AnyWS:
+        {
+            btns[0]->setEnabled(false);
+            btns[1]->setEnabled(false);
+            ui->typeRRBgCard->setEnabled(false);
+            ui->typeRoomBgCard->setEnabled(false);
+            if (!simulatePressed)
+                btns[2]->simulateStatePress();
+            ui->label_12->setText("单设备\n多直播间");
+            break;
+        }
+        default:
+        {
+            btns[0]->setEnabled(false);
+            btns[1]->setEnabled(false);
+            btns[2]->setEnabled(false);
+            ui->typeRRBgCard->setEnabled(false);
+            ui->typeRoomBgCard->setEnabled(false);
+            ui->typeRobotBgCard->setEnabled(false);
+            break;
+        }
+        }
+
+
     }
 }
 
@@ -379,7 +426,7 @@ void BuyVIPDialog::on_payButton_clicked()
          "room_title", roomTitle, "up_name", upName, "username", username,
          "vip_type", snum(vipType), "vip_level", snum(vipLevel),
          "month", snum(vipMonth), "coupon", couponCode,
-         "app_id", APP_ID, "app_verion", APP_VERSION },
+         "app_id", APP_ID, "live_platform", snum(rt->livePlatform) ,"app_verion", APP_VERSION },
         [=](MyJson json){
 
         QString html = json.s("data");

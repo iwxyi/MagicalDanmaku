@@ -1,4 +1,4 @@
-QT       += core gui network websockets multimedia multimediawidgets sql svg qml
+QT       += core gui network websockets multimedia multimediawidgets sql svg qml quick quickcontrols2
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -33,12 +33,6 @@ macx{
     DEFINES += ENABLE_TEXTTOSPEECH ENABLE_LUA
 }
 DEFINES += ENABLE_HTTP_SERVER
-#unix:!macx{
-#    DEFINES += ENABLE_SHORTCUT ENABLE_TRAY
-#}
-#unix:!android{
-#    DEFINES += ENABLE_SHORTCUT
-#}
 
 contains(DEFINES, ENABLE_SHORTCUT) {
     include($$PWD/third_party/qxtglobalshortcut5/qxt.pri)
@@ -50,6 +44,15 @@ contains(DEFINES, ENABLE_TEXTTOSPEECH) {
     QT += texttospeech
 }
 
+# 自动检查模块是否存在
+qtHaveModule(webenginewidgets) {
+    # DEFINES += ENABLE_WEBENGINE
+}
+contains(DEFINES, ENABLE_WEBENGINE) {
+#Win的minGW版不支持 QtWebEngine，但是 MSVC版、Mac、Linux 默认就支持的
+    QT += webenginewidgets
+}
+
 # 调试
 # release版本可调试
 # QMAKE_CXXFLAGS_RELEASE #+= $$QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO
@@ -59,12 +62,18 @@ contains(DEFINES, ENABLE_TEXTTOSPEECH) {
 # 调用库
 # LIBS += -lDbgHelp
 
+LIBS += -lz
 
 INCLUDEPATH += \
     global/ \
     mainwindow/ \
     services/ \
     services/live_services/ \
+    services/live_services/base/ \
+    services/live_services/bilibili/ \
+    services/live_services/douyin/ \
+    services/live_services/keyu/ \
+    services/live_services/anyws/ \
     services/entities/ \
     services/code_runner/ \
     services/sql_service/ \
@@ -78,6 +87,7 @@ INCLUDEPATH += \
     third_party/utils/ \
     mainwindow/list_items/ \
     mainwindow/live_danmaku/ \
+    mainwindow/code_gui/ \
     third_party/interactive_buttons/ \
     third_party/facile_menu/ \
     order_player/ \
@@ -92,10 +102,12 @@ INCLUDEPATH += \
     widgets/guard_online/ \
     widgets/smooth_scroll/ \
     widgets/buy_vip/ \
+    widgets/webview_login/ \
     widgets/ \
     third_party/ \
     widgets/editor/ \
     widgets/db_browser/ \
+    widgets/notice_manager/ \
     third_party/gif/ \
     third_party/picture_browser/ \
     third_party/notification/ \
@@ -108,6 +120,10 @@ INCLUDEPATH += \
 
 SOURCES += \
     global/usersetting.cpp \
+    mainwindow/code_gui/codeguieditor.cpp \
+    mainwindow/code_gui/codelinecommenteditor.cpp \
+    mainwindow/code_gui/codelineeditor.cpp \
+    mainwindow/code_gui/codelinesplitterwidget.cpp \
     mainwindow/run_cmd.cpp \
     services/chat_service/chatservice.cpp \
     services/code_runner/chatgptmanager.cpp \
@@ -117,13 +133,21 @@ SOURCES += \
     services/language_service/js/networkwrapper.cpp \
     services/language_service/lua/luaengine.cpp \
     services/language_service/python/pythonengine.cpp \
-    services/live_services/bili_livecmds.cpp \
-    services/live_services/bili_liveopen_cmds.cpp \
-    services/live_services/bili_liveopenservice.cpp \
-    services/live_services/bili_liveservice.cpp \
-    services/live_services/bili_nanopb/interact_word_v2.pb.c \
-    services/live_services/liveroomservice.cpp \
-    services/live_services/livestatisticservice.cpp \
+    services/language_service/qml/qmlengine.cpp \
+    services/live_services/anyws/anywebsocketservice.cpp \
+    services/live_services/bilibili/bili_livecmds.cpp \
+    services/live_services/bilibili/bili_liveopen_cmds.cpp \
+    services/live_services/bilibili/bili_liveopenservice.cpp \
+    services/live_services/bilibili/bili_liveservice.cpp \
+    services/live_services/bilibili/protobuf/interact_word_v2.pb.c \
+    services/live_services/douyin/douyin_livecmds.cpp \
+    services/live_services/douyin/douyin_liveservice.cpp \
+    services/live_services/base/liveservicebase.cpp \
+    services/live_services/base/livestatisticservice.cpp \
+    services/live_services/douyin/douyinsignatureabogus.cpp \
+    services/live_services/douyin/douyinsignaturehelper.cpp \
+    services/live_services/douyin/protobuf/douyin.pb.c \
+    services/live_services/keyu/keyu_liveservice.cpp \
     services/sql_service/sqlservice.cpp \
     order_player/importsongsdialog.cpp \
     services/voice_service/voiceservice.cpp \
@@ -160,7 +184,7 @@ SOURCES += \
     third_party/brotli/enc/static_dict.c \
     third_party/brotli/enc/utf8_util.c \
     third_party/color_octree/coloroctree.cpp \
-    third_party/color_octree/coloroctreeutil.cpp \
+    third_party/color_octree/imageutil.cpp \
     third_party/cron/cronparser.cpp \
     third_party/cron/crontimer.cpp \
     third_party/facile_menu/facilemenu.cpp \
@@ -195,12 +219,15 @@ SOURCES += \
     third_party/notification/tipcard.cpp \
     third_party/qss_editor/qsseditdialog.cpp \
     third_party/qss_editor/qsshighlighteditor.cpp \
+    third_party/utils/CPU_ID/system_cpuid.cpp \
+    third_party/utils/calculatorutil.cpp \
     third_party/utils/httpuploader.cpp \
     third_party/utils/microsofttts.cpp \
     third_party/utils/rsautil.cpp \
     third_party/utils/string_hash.cpp \
     third_party/utils/warmwishtutil.cpp \
     widgets/buy_vip/buyvipdialog.cpp \
+    widgets/collapsiblegroupbox.cpp \
     widgets/csvviewer.cpp \
     widgets/db_browser/dbbrowser.cpp \
     widgets/db_browser/sqleditor.cpp \
@@ -225,6 +252,7 @@ SOURCES += \
     third_party/qrencode/split.c \
     mainwindow/server.cpp \
     third_party/utils/xfytts.cpp \
+    widgets/notice_manager/noticemanagerwindow.cpp \
     widgets/singleentrance.cpp \
     widgets/smooth_scroll/smoothlistwidget.cpp \
     widgets/smooth_scroll/waterfallscrollarea.cpp \
@@ -246,7 +274,9 @@ SOURCES += \
     third_party/utils/stringutil.cpp \
     third_party/utils/textinputdialog.cpp \
     widgets/video_player/livevideoplayer.cpp \
-    widgets/video_lyric_creator/videolyricscreator.cpp
+    widgets/video_lyric_creator/videolyricscreator.cpp \
+    widgets/webview_login/WebLoginDialog.cpp \
+    widgets/webview_login/WebLoginUtil.cpp
 
 HEADERS += \
     global/accountinfo.h \
@@ -255,6 +285,12 @@ HEADERS += \
     global/runtimeinfo.h \
     global/signaltransfer.h \
     global/usersettings.h \
+    mainwindow/code_gui/codeeditorinterface.h \
+    mainwindow/code_gui/codeguieditor.h \
+    mainwindow/code_gui/codelinecommenteditor.h \
+    mainwindow/code_gui/codelineeditor.h \
+    mainwindow/code_gui/codelinesplitterwidget.h \
+    mainwindow/code_gui/codelinewidgetbase.h \
     services/chat_service/chatservice.h \
     services/code_runner/chatgptmanager.h \
     services/code_runner/coderunner.h \
@@ -263,6 +299,7 @@ HEADERS += \
     services/ai_analysis_service/fansarchivesservice.h \
     services/language_service/js/networkwrapper.h \
     services/language_service/python/pythonengine.h \
+    services/language_service/qml/qmlengine.h \
     services/language_service/wrapper/danmakuwrapper.h \
     services/language_service/js/jsconsole.h \
     services/language_service/js/jsengine.h \
@@ -271,12 +308,21 @@ HEADERS += \
     services/language_service/wrapper/danmakuwrapperstd.h \
     services/language_service/wrapper/settingswrapper.h \
     services/language_service/wrapper/settingswrapperstd.h \
-    services/live_services/bili_liveopenservice.h \
-    services/live_services/bili_liveservice.h \
-    services/live_services/bili_nanopb/interact_word_v2.pb.h \
-    services/live_services/bili_nanopb/nanopbutil.h \
-    services/live_services/liveroomservice.h \
-    services/live_services/livestatisticservice.h \
+    services/live_services/anyws/anywebsocketservice.h \
+    services/live_services/bilibili/bili_liveopenservice.h \
+    services/live_services/bilibili/bili_liveservice.h \
+    services/live_services/bilibili/protobuf/interact_word_v2.pb.h \
+    services/live_services/douyin/douyin_api_util.h \
+    services/live_services/douyin/douyin_liveservice.h \
+    services/live_services/base/liveservicebase.h \
+    services/live_services/base/livestatisticservice.h \
+    services/live_services/base/api_type.h \
+    services/live_services/douyin/douyinackgenerator.h \
+    services/live_services/douyin/douyinsignatureabogus.h \
+    services/live_services/douyin/douyinsignaturehelper.h \
+    services/live_services/douyin/protobuf/douyin.pb.h \
+    services/live_services/douyin/silentwebenginepage.h \
+    services/live_services/keyu/keyu_liveservice.h \
     services/sql_service/sqlservice.h \
     order_player/importsongsdialog.h \
     services/voice_service/voiceservice.h \
@@ -341,12 +387,8 @@ HEADERS += \
     third_party/brotli/include/brotli/port.h \
     third_party/brotli/include/brotli/shared_dictionary.h \
     third_party/brotli/include/brotli/types.h \
-    third_party/calculator/Digit.h \
-    third_party/calculator/calculator_util.h \
-    third_party/calculator/func_define.h \
-    third_party/calculator/function.h \
     third_party/color_octree/coloroctree.h \
-    third_party/color_octree/coloroctreeutil.h \
+    third_party/color_octree/imageutil.h \
     third_party/cron/cronparser.h \
     third_party/cron/crontimer.h \
     third_party/facile_menu/facilemenu.h \
@@ -386,8 +428,12 @@ HEADERS += \
     third_party/notification/tipcard.h \
     third_party/qss_editor/qsseditdialog.h \
     third_party/qss_editor/qsshighlighteditor.h \
+    third_party/utils/CPU_ID/cpu_id_util.h \
+    third_party/utils/CPU_ID/imei_util.h \
+    third_party/utils/CPU_ID/system_cpuid.h \
     third_party/utils/ImageSimilarityUtil.h \
     third_party/utils/bili_api_util.h \
+    third_party/utils/calculatorutil.h \
     third_party/utils/chatgptutil.h \
     third_party/utils/conditionutil.h \
     third_party/utils/emailutil.h \
@@ -404,10 +450,12 @@ HEADERS += \
     widgets/buy_vip/buyvipdialog.h \
     widgets/clickablelabel.h \
     widgets/clickablewidget.h \
+    widgets/collapsiblegroupbox.h \
     widgets/csvviewer.h \
     widgets/custompaintwidget.h \
     widgets/db_browser/dbbrowser.h \
     widgets/db_browser/sqleditor.h \
+    widgets/editor/conditionlineeditor.h \
     widgets/eternal_block_dialog/externalblockdialog.h \
     widgets/eternal_block_dialog/externalblockuser.h \
     widgets/guard_online/guardonlinedialog.h \
@@ -438,6 +486,8 @@ HEADERS += \
     third_party/qrencode/split.h \
     third_party/utils/myjson.h \
     third_party/utils/xfytts.h \
+    widgets/notice_manager/noticebean.h \
+    widgets/notice_manager/noticemanagerwindow.h \
     widgets/partimagewidget.h \
     widgets/singleentrance.h \
     widgets/smooth_scroll/smoothlistwidget.h \
@@ -467,6 +517,8 @@ HEADERS += \
     third_party/utils/textinputdialog.h \
     widgets/video_player/livevideoplayer.h \
     widgets/video_lyric_creator/videolyricscreator.h \
+    widgets/webview_login/WebLoginDialog.h \
+    widgets/webview_login/WebLoginUtil.h \
     widgets/windowshwnd.h
 
 FORMS += \
@@ -481,6 +533,7 @@ FORMS += \
     order_player/orderplayerwindow.ui \
     third_party/picture_browser/picturebrowser.ui \
     third_party/utils/textinputdialog.ui \
+    widgets/notice_manager/noticemanagerwindow.ui \
     widgets/singleentrance.ui \
     widgets/video_player/livevideoplayer.ui \
     widgets/catch_you_dialog/catchyouwidget.ui \
