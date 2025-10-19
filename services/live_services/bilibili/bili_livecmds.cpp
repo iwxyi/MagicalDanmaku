@@ -879,7 +879,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
                 "esports_jump_url": ""
             }
             */
-            MyJson extra = MyJson::from(extra_s.toLocal8Bit());
+            MyJson extra = MyJson::from(extra_s.toUtf8());
             if (!extra.isEmpty())
             {
                 bool show_reply = extra.b("show_reply");
